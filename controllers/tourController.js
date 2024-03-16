@@ -26,19 +26,30 @@ exports.getAllTours = async (req, res) => {
 
     try {
 
-        const tours = await Tour.find();
+        let queryObj = { ...req.query };
+        const excludedFields = ['page', 'sprt', 'limit', 'fields'];
+        excludedFields.forEach(el => delete queryObj[el]);
+
+        let queryString = JSON.stringify(queryObj);
+        queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`)
+
+        queryObj = JSON.parse(queryString);
+        
+        const query = Tour.find(queryObj);
+
+        const tours = await query;
 
         res
-        .status(200)
-        .json({
-            status: 'success',
-            results: tours.length,
-            data: {
-                tours
-            }
-        })
+            .status(200)
+            .json({
+                status: 'success',
+                results: tours.length,
+                data: {
+                    tours
+                }
+            })
 
-    } catch(err) {
+    } catch (err) {
 
         res.status(404).json({
             status: 'Fail',
@@ -47,7 +58,7 @@ exports.getAllTours = async (req, res) => {
 
     }
 
-    
+
 }
 
 exports.getTour = async (req, res) => {
@@ -58,20 +69,20 @@ exports.getTour = async (req, res) => {
         // Tour.findOne({ _id: req.params.id })
 
         res
-        .status(200)
-        .json({
-            status: 'Success',
-            data: tour
-        })
+            .status(200)
+            .json({
+                status: 'Success',
+                data: tour
+            })
 
-    } catch(err) {
+    } catch (err) {
 
         res
-        .status(404)
-        .json({
-            status: 'Fail',
-            message: err
-        })
+            .status(404)
+            .json({
+                status: 'Fail',
+                message: err
+            })
 
     }
 
@@ -84,20 +95,20 @@ exports.createTour = async (req, res) => {
         // Old way
         // const newTour = new Tour({})
         // newTour.save();
-        
+
         // New way
         const newTour = await Tour.create(req.body);
 
         res
-        .status(201) // created
-        .json({
-            status: "success",
-            data: {
-                tour: newTour
-            }
-        })
+            .status(201) // created
+            .json({
+                status: "success",
+                data: {
+                    tour: newTour
+                }
+            })
 
-    } catch(err) {
+    } catch (err) {
 
         res.status(400).json({
             status: 'Fail',
@@ -105,7 +116,7 @@ exports.createTour = async (req, res) => {
         })
 
     }
-    
+
 }
 
 exports.updateTour = async (req, res) => {
@@ -124,7 +135,7 @@ exports.updateTour = async (req, res) => {
             }
         })
 
-    } catch(err) {
+    } catch (err) {
 
         res.status(404).json({
             status: 'Fail',
@@ -132,7 +143,7 @@ exports.updateTour = async (req, res) => {
         })
 
     }
-    
+
 }
 
 exports.deleteTour = async (req, res) => {
@@ -145,7 +156,7 @@ exports.deleteTour = async (req, res) => {
             status: 'Tour deleted'
         })
 
-    } catch(err) {
+    } catch (err) {
 
         res.status(404).json({
             status: 'Fail',
