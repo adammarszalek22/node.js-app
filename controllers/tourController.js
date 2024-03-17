@@ -1,27 +1,13 @@
-const { listen } = require('../app');
 const Tour = require('./../models/tourModel')
 
-// exports.checkId = (req, res, next, val) => {
-//     if (+req.params.id > tours.length) {
-//         return res.status(404).json({
-//             status: "Fail",
-//             message: "Invalid ID"
-//         })
-//     }
+exports.aliasTopTours = (req, res, next) => {
+    
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAvergae,price';
+    req.query.fields = 'name,price,ratingsAvergae,summary,difficulty';
+    next();
 
-//     next();
-// }
-
-// exports.checkBody = (req, res, next) => {
-//     if (!req.body.name || !req.body.price) {
-//         return res.status(400).json({
-//             status: "fail",
-//             message: "Missing name or price"
-//         })
-//     }
-
-//     next();
-// }
+}
 
 exports.getAllTours = async (req, res) => {
 
