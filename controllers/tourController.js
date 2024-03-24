@@ -2,7 +2,7 @@ const Tour = require('./../models/tourModel');
 const APIFeatures = require('./../utils/api-features');
 
 exports.aliasTopTours = (req, res, next) => {
-    
+
     req.query.limit = '5';
     req.query.sort = '-ratingsAvergae,price';
     req.query.fields = 'name,price,ratingsAvergae,summary,difficulty';
@@ -15,10 +15,10 @@ exports.getAllTours = async (req, res) => {
     try {
 
         const features = new APIFeatures(Tour.find(), req.query)
-        .filter()
-        .sort()
-        .limitFields()
-        .paginate();
+            .filter()
+            .sort()
+            .limitFields()
+            .paginate();
         const tours = await features.query;
 
         res
@@ -169,10 +169,10 @@ exports.getTourStats = async (req, res) => {
             },
             {
                 $sort: { averagePrice: 1 }
-            },
-            {
-                $match: { _id: { $ne: 'EASY' } }
             }
+            // {
+            //     $match: { _id: { $ne: 'EASY' } }
+            // }
         ])
 
         res.status(200).json({
@@ -182,12 +182,68 @@ exports.getTourStats = async (req, res) => {
             }
         })
 
-    } catch(err) {
+    } catch (err) {
 
         res.status(404).json({
             status: 'Fail',
             message: err
         })
 
+    }
+}
+
+exports.getMonthlyPlan = async (req, res) => {
+
+    try {
+
+        const year = +req.params.year;
+
+        const plan = await Tour.aggregate([
+            {
+                $unwind: '$startDates'
+            },
+            {
+                $match: {
+                    startDates: {
+                        $gte: new Date(`${year}-01-01`),
+                        $lte: new Date(`${year}-12-31`)
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: '$startDates' },
+                    numToursStarts: { $sum: 1 },
+                    tours: { $push: '$name' }
+                }
+            },
+            {
+                $addFields: { month: '$_id' }
+            },
+            {
+                $project: {
+                    _id: 0
+                }
+            },
+            {
+                $sort: { numToursStarts: -1 }
+            },
+            {
+                $limit: 12
+            }
+        ]);
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                plan
+            }
+        })
+
+    } catch (err) {
+        res.status(404).json({
+            status: 'Fail',
+            message: err
+        })
     }
 }
